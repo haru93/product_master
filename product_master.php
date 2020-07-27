@@ -17,6 +17,7 @@
 // 2, 商品登録
 // ・id生成（自動）
 // ・商品名 - 入力
+
 // ・JANコード生成(自動)
 // ※JANコード生成ルールは、9桁のランダムな数字 + ID３桁
 // ex) id = 1 のアイテムなら
@@ -33,7 +34,12 @@
 // ・商品名
 // ・JANコード
 
-// 5, 終了
+// 5, CSV読込
+// import/というディレクトリを作成し、その中にimport用のcsvファイルを要設置
+// もしcsvが１つ以上あったら、importディレクトリ内のファイルをすべて読み込み
+// csvの内容を上書き登録
+
+// 6, 終了
 
 
 class Item
@@ -41,7 +47,7 @@ class Item
 	// プログラム起動時に指定フォルダ・ファイルの確認をし、存在しなければ作成する
 	public function __construct()
 	{
-		echo Guide::$format["操作開始"];
+		echo Config::$guide["操作開始"];
 		$file = new File;
 		$file->dirCheck();
 		$file->fileCheck();
@@ -64,14 +70,14 @@ class Item
 	// メニュー入力
 	private function inputChoice()
 	{
-		echo Guide::$format["操作選択"];
+		echo Config::$guide["操作選択"];
 		$num = trim(fgets(STDIN));
 
-		$inputMatchValidation = new InputMatchValidation($num, ChoiceKey::$format);
+		$inputMatchValidation = new InputMatchValidation($num, Config::$choiceKey);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
 		if (!empty($errorMsg)) {
 			if ($errorMsg === "unmatch") {
-				echo Guide::$format["入力値不明"];
+				echo Config::$guide["入力値不明"];
 			} else {
 				echo $errorMsg;
 			}
@@ -84,19 +90,22 @@ class Item
 	private function choice($num)
 	{
 		switch (true) {
-			case $num === ChoiceKey::$format["商品一覧表示"]:
+			case $num === Config::$choiceKey["商品一覧表示"]:
 				$this->show();
 				break;
-			case $num === ChoiceKey::$format["商品登録"]:
+			case $num === Config::$choiceKey["商品登録"]:
 				$this->add();
 				break;
-			case $num === ChoiceKey::$format["商品削除"]:
+			case $num === Config::$choiceKey["商品削除"]:
 				$this->delete();
 				break;
-			case $num === ChoiceKey::$format["商品一覧CSV出力"]:
+			case $num === Config::$choiceKey["商品一覧CSV出力"]:
 				$this->csv();
 				break;
-			case $num === ChoiceKey::$format["終了"]:
+			case $num === Config::$choiceKey["CSV読込"]:// CSVファイルのインポート機能を追加★
+				$this->importCsv();
+				break;
+			case $num === Config::$choiceKey["終了"]:
 				$this->quit();
 				break;
 		}
@@ -107,23 +116,23 @@ class Item
 	{
 		$num = $this->inputContinue();
 
-		if ($num === ContinueKey::$format["はい"]) {
+		if ($num === Config::$continueKey["はい"]) {
 			return true;
-		} elseif ($num === ContinueKey::$format["いいえ"]) {
+		} elseif ($num === Config::$continueKey["いいえ"]) {
 			return false;
 		}
 	}
 
 	private function inputContinue()
 	{
-		echo Guide::$format["継続確認"];
+		echo Config::$guide["継続確認"];
 		$num = trim(fgets(STDIN));
 
-		$inputMatchValidation = new InputMatchValidation($num, ContinueKey::$format);
+		$inputMatchValidation = new InputMatchValidation($num, Config::$continueKey);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
 		if (!empty($errorMsg)) {
 			if ($errorMsg === "unmatch") {
-				echo Guide::$format["入力値不明"];
+				echo Config::$guide["入力値不明"];
 			} else {
 				echo $errorMsg;
 			}
@@ -175,7 +184,7 @@ class Item
 	// 商品名入力
 	private function inputName()
 	{
-		echo Guide::$format["商品入力"];
+		echo Config::$guide["商品入力"];
 		$name = trim(fgets(STDIN));
 
 		$inputNameValidation = new InputNameValidation($name);
@@ -195,7 +204,7 @@ class Item
 		
 		$countData = count($data);
 		if ($countData === 1) {
-			echo Guide::$format["商品不明"];
+			echo Config::$guide["商品不明"];
 			$this->main();
 		}
 		
@@ -218,7 +227,7 @@ class Item
 	// 商品IDの入力
 	private function inputId($data)
 	{
-		echo Guide::$format["商品削除"];
+		echo Config::$guide["商品削除"];
 		$id = trim(fgets(STDIN));
 
 		foreach ($data as $key => $line) {
@@ -231,7 +240,7 @@ class Item
 		$errorMsg = $inputMatchValidation->getErrorMsg();
 		if (!empty($errorMsg)) {
 			if ($errorMsg === "unmatch") {
-				echo Guide::$format["ID不明"];
+				echo Config::$guide["ID不明"];
 			} else {
 				echo $errorMsg;
 			}
@@ -244,27 +253,30 @@ class Item
 	private function csv()
 	{
 		$file = new File;
-		$data = $file->readFile();
+		$file->newCsv();
 
-		$newFile = new NewFile($data);
+		echo Config::$guide["CSV出力"];
+	}
 
-		echo Guide::$format["CSV出力"];
+	// CSV読込処理
+	private function importCsv()
+	{
+		$file = new File;
+		$file->import();
 	}
 
 	// プログラムの終了
 	private function quit()
 	{
-		exit(Guide::$format["操作終了"]);
+		exit(Config::$guide["操作終了"]);
 	}
 }
 
 
-
-// 案内文の出力クラス
-class Guide
+class Config// 出力文やマジックナンバーを管理するため、Configクラスを生成　修正★
 {
-	public static $format = array(
-		"操作選択" => "操作に該当する番号を入力してください【1:商品一覧,2:商品登録,3:商品削除,4:CSV出力,5:終了】\n",
+	public static $guide = array(
+		"操作選択" => "操作に該当する番号を入力してください【1:商品一覧,2:商品登録,3:商品削除,4:CSV出力,5:CSV読込,6:終了】\n",
 		"操作終了" => "プログラムを終了します\n",
 		"継続確認" => "操作を続けますか？【1:はい,2:いいえ】\n",
 		"商品入力" => "商品名を入力してください\n",
@@ -276,35 +288,26 @@ class Guide
 		"ID不明" => "存在するIDを入力してください\n",
 		"入力値不明" => "該当の番号を入力してください\n",
 		"商品不明" => "商品が登録されていません\n",
-		"CSV出力" => "CSVファイルを出力しました\n"
+		"CSV出力" => "CSVファイルを出力しました\n",
+		"読込用フォルダ作成" => "読込用のimportフォルダがないため作成します\n",
+		"読込用データ不明" => "データが入っていないため読込めませんでした\n",
+		"読込用ファイル不明" => "ファイルが存在しないため読み込めませんでした\nimportフォルダに読込用ファイルを格納してください\n"
 	);
-}
 
-
-
-// マジックナンバー管理（メニュー選択用）
-class ChoiceKey
-{
-	public static $format = array(
+	public static $choiceKey = array(
 		"商品一覧表示" => "1",
 		"商品登録" => "2",
 		"商品削除" => "3",
 		"商品一覧CSV出力" => "4",
-		"終了" => "5"
+		"CSV読込" => "5",
+		"終了" => "6"
 	);
-}
 
-
-
-// マジックナンバー管理（継続確認用）
-class ContinueKey
-{
-	public static $format = array(
+	public static $continueKey = array(
 		"はい" => "1",
 		"いいえ" => "2"
 	);
 }
-
 
 
 // ファイル操作をまとめるクラス
@@ -312,11 +315,14 @@ class File
 {
 	private $dirPath = "./csv/";
 	private $filePath = "./csv/item.csv";
+	private const HEAD = "id,name,code\n";// 見出しの文字列を定数化　修正★
+	private const IMPORTPATH = "./csv/import/";// 追加★
+	private const IMPORTCSVPATH = "./csv/import/*.csv";// 追加★
 
 	public function dirCheck()
 	{
 		if (!file_exists($this->dirPath)) {
-			echo Guide::$format["フォルダ作成"];
+			echo Config::$guide["フォルダ作成"];
 			mkdir($this->dirPath, 0777, true);
 		}
 	}
@@ -324,10 +330,9 @@ class File
 	public function fileCheck()
 	{
 		if (!file_exists($this->filePath)) {
-			echo Guide::$format["ファイル作成"];
+			echo Config::$guide["ファイル作成"];
 			$fp = fopen($this->filePath, 'w');
-			$line = "id,name,code\n";
-			fwrite($fp, $line);
+			fwrite($fp, self::HEAD);
 			fclose($fp);
 		}
 	}
@@ -357,36 +362,64 @@ class File
 		}
 		fclose($fp);
 	}
-}
 
-
-
-// CSV出力クラス
-class NewFile
-{
-	private $fileNewPath;
-	private $data;
-
-	public function __construct($data)
+	public function newCsv()//CSV出力クラスを削除し、メソッドをFileクラスに含める形とした　修正★
 	{
+		$data = $this->readFile();
+
 		$date = date("YmdHis");
-		$this->fileNewPath = "./csv/item_list_{$date}.csv";
+		$fileNewPath = "./csv/item_list_{$date}.csv";
 
-		$this->data = $data;
-
-		$this->writeNewFile();
-	}
-
-	private function writeNewFile()
-	{
-		$fp = fopen($this->fileNewPath, 'w');
-		foreach ($this->data as $line) {
+		$fp = fopen($fileNewPath, 'w');
+		foreach ($data as $line) {
 			fputcsv($fp, $line);
 		}
 		fclose($fp);
 	}
-}
 
+	public function import()// CSVファイルのインポート機能を追加★
+	{
+		$importPath = self::IMPORTPATH;
+		if (!file_exists($importPath)) {
+			echo Config::$guide["読込用フォルダ作成"];
+			mkdir($importPath, 0777, true);
+			return;
+		}
+
+		foreach (glob(self::IMPORTCSVPATH) as $csvPath) {
+			$csvFiles[] = $csvPath;
+		}
+
+		if (empty($csvFiles)) {
+			echo Config::$guide["読込用ファイル不明"];
+			return;
+		}
+
+		$fp = fopen($this->filePath, 'a+');
+		foreach ($csvFiles as $csvPath) {
+			$csvFp = fopen($csvPath, 'r');
+
+			$data = [];
+			while ($line = fgetcsv($csvFp)) {
+				$data[] = $line;
+			}
+
+			$importCsvValidation = new ImportCsvValidation($data);
+			$errorMsg = $importCsvValidation->getErrorMsg();
+			if (!empty($errorMsg)) {
+				echo "【読込エラー】$csvPath\n";
+				echo $errorMsg;
+				continue;
+			}
+			
+			foreach ($data as $importLine) {
+				fputcsv($fp, $importLine);
+			}
+			fclose($csvFp);
+		}
+		fclose($fp);
+	}
+}
 
 
 // バリデーション
@@ -404,7 +437,7 @@ class InputNameValidation
 	private function validation()
 	{
 		if (empty($this->data)) {
-			$this->errorMsg = Guide::$format["値未入力"];
+			$this->errorMsg = Config::$guide["値未入力"];
 			return;
 		}
 	}
@@ -436,11 +469,39 @@ class InputMatchValidation
 	private function validation()
 	{
 		if (empty($this->num)) {
-			$this->errorMsg = Guide::$format["値未入力"];
+			$this->errorMsg = Config::$guide["値未入力"];
 			return;
 		}
 		if (!in_array($this->num, $this->match, true)) {
 			$this->errorMsg = "unmatch";
+			return;
+		}
+	}
+
+	public function getErrorMsg()
+	{
+		if ($this->errorMsg) {
+			return $this->errorMsg;
+		}
+	}
+}
+
+
+class ImportCsvValidation// 追加★
+{
+	private $data;
+	private $errorMsg;
+
+	public function __construct($data)
+	{
+		$this->data = $data;
+		$this->validation();
+	}
+
+	private function validation()
+	{
+		if (empty($this->data)) {
+			$this->errorMsg = Config::$guide["読込用データ不明"];
 			return;
 		}
 	}
