@@ -49,30 +49,30 @@ class Item
 	// 実行プログラム
 	public function main()
 	{
-		$num = $this->inputChoice();
-		$this->choice($num);
+		$inputData = $this->inputChoice();
+		$this->choice($inputData);
 	}
 
 	// メニュー入力
 	private function inputChoice()
 	{
 		echo self::FORMAT["操作選択"];
-		$num = trim(fgets(STDIN));
+		$inputData = trim(fgets(STDIN));
 
-		$inputMatchValidation = new InputMatchValidation($num, self::CHOICE, self::FORMAT["入力値不明"]);
+		$inputMatchValidation = new InputMatchValidation($inputData, self::CHOICE, self::FORMAT["入力値不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
 
 		if (!empty($errorMsg)) {
 			echo $errorMsg;
 			return $this->inputChoice();
 		}
-		return $num;
+		return $inputData;
 	}
 
 	// 各機能への振り分け処理
-	private function choice($num)
+	private function choice($inputData)
 	{
-		switch ($num) {
+		switch ($inputData) {
 			case self::CHOICE["商品一覧表示"]:
 				$this->show();
 				break;
@@ -97,25 +97,25 @@ class Item
 	// プログラム継続確認
 	private function confirm()
 	{
-		$num = $this->inputConfirm();
+		$inputData = $this->inputConfirm();
 
-		if ($num === self::CONTINUE["はい"]) return true;
-		if ($num === self::CONTINUE["いいえ"]) return false;
+		if ($inputData === self::CONTINUE["はい"]) return true;
+		if ($inputData === self::CONTINUE["いいえ"]) return false;
 	}
 
 	private function inputConfirm()
 	{
 		echo self::FORMAT["終了確認"];
-		$num = trim(fgets(STDIN));
+		$inputData = trim(fgets(STDIN));
 
-		$inputMatchValidation = new InputMatchValidation($num, self::CONTINUE, self::FORMAT["入力値不明"]);
+		$inputMatchValidation = new InputMatchValidation($inputData, self::CONTINUE, self::FORMAT["入力値不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
 
 		if (!empty($errorMsg)) {
 			echo $errorMsg;
 			return $this->inputConfirm();
 		}
-		return $num;
+		return $inputData;
 	}
 
 	// 商品一覧の表示
@@ -147,13 +147,13 @@ class Item
 		}
 		
 		// 商品名の取得
-		$name = $this->inputName();
+		$inputData = $this->inputName();
 		
 		// JANコードの生成
 		$randNums = mt_rand(100000000, 999999999);
 		$code = sprintf("%d%03d", $randNums, $lastIdAdd);
 		
-		$line = sprintf("%d,%s,%d\n", $lastIdAdd, $name, $code);
+		$line = sprintf("%d,%s,%d\n", $lastIdAdd, $inputData, $code);
 		$file->addFile($line);
 
 		$this->show();
@@ -165,15 +165,15 @@ class Item
 	private function inputName()
 	{
 		echo self::FORMAT["商品入力"];
-		$name = trim(fgets(STDIN));
+		$inputData = trim(fgets(STDIN));
 
-		$inputNameValidation = new InputNameValidation($name);
+		$inputNameValidation = new InputNameValidation($inputData);
 		$errorMsg = $inputNameValidation->getErrorMsg();
 		if (!empty($errorMsg)) {
 			echo $errorMsg;
 			return $this->inputName();
 		}
-		return $name;
+		return $inputData;
 	}
 
 	// 商品の削除
@@ -219,7 +219,7 @@ class Item
 
 		$inputMatchValidation = new InputMatchValidation($id, $idList, self::FORMAT["ID不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
-		
+
 		if (!empty($errorMsg)) {
 			echo $errorMsg;
 			return $this->inputId($data);
