@@ -7,7 +7,7 @@ class Item
 	public const FORMAT = array(
 		"操作選択" => "操作に該当する番号を入力してください【1:商品一覧,2:商品登録,3:商品削除,4:CSV出力,5:CSV読込,6:終了】\n",
 		"操作終了" => "プログラムを終了します\n",
-		"継続確認" => "操作を続けますか？【1:はい,2:いいえ】\n",
+		"終了確認" => "本当にプログラムを終了してよろしいですか【1:はい,2:いいえ】\n",
 		"商品入力" => "商品名を入力してください\n",
 		"商品削除" => "削除をする商品IDを入力してください\n",
 		"操作開始" => "プログラムを開始します\n",
@@ -51,10 +51,6 @@ class Item
 	{
 		$num = $this->inputChoice();
 		$this->choice($num);
-
-		$isContinue = $this->nextChoice();
-		if ($isContinue) return $this->main();
-		$this->quit();
 	}
 
 	// メニュー入力
@@ -98,17 +94,17 @@ class Item
 	}
 
 	// プログラム継続確認
-	private function nextChoice()
+	private function confirm()
 	{
-		$num = $this->inputContinue();
+		$num = $this->inputConfirm();
 
 		if ($num === self::CONTINUE["はい"]) return true;
 		if ($num === self::CONTINUE["いいえ"]) return false;
 	}
 
-	private function inputContinue()
+	private function inputConfirm()
 	{
-		echo self::FORMAT["継続確認"];
+		echo self::FORMAT["終了確認"];
 		$num = trim(fgets(STDIN));
 
 		$inputMatchValidation = new InputMatchValidation($num, self::CONTINUE);
@@ -116,7 +112,7 @@ class Item
 
 		if ($errorMsg === "unmatch") echo self::FORMAT["入力値不明"];
 		if (!empty($errorMsg) && $errorMsg !== "unmatch") echo $errorMsg;
-		if (!empty($errorMsg)) return $this->inputContinue();
+		if (!empty($errorMsg)) return $this->inputConfirm();
 		return $num;
 	}
 
@@ -129,6 +125,8 @@ class Item
 		foreach ($data as $line) {
 			echo implode(",", $line)."\n";
 		}
+
+		$this->main();
 	}
 
 	// 商品の登録
@@ -157,6 +155,7 @@ class Item
 		$file->addFile($line);
 
 		$this->show();
+		$this->main();
 	}
 
 
@@ -201,6 +200,7 @@ class Item
 		$file->writeFile($data);
 
 		$this->show();
+		$this->main();
 	}
 
 	// 商品IDの入力
@@ -231,6 +231,8 @@ class Item
 		$file->newCsv();
 
 		echo self::FORMAT["CSV出力"];
+
+		$this->main();
 	}
 
 	// CSV読込処理
@@ -238,11 +240,16 @@ class Item
 	{
 		$file = new File;
 		$file->import();
+
+		$this->main();
 	}
 
 	// プログラムの終了
 	private function quit()
 	{
+		$isConfirm = $this->confirm();
+		if (!$isConfirm) return $this->main();
+
 		exit(self::FORMAT["操作終了"]);
 	}
 }
