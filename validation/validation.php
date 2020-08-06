@@ -1,20 +1,13 @@
 <?php
-// バリデーション
-class InputNameValidation
+class BaseValidation
 {
-	private $data;
-	private $errorMsg;
-
-	public function __construct($data)
+	protected $inputData;
+	protected $errorMsg;
+	
+	public function emptyValidate($format)
 	{
-		$this->data = $data;
-		$this->validation();
-	}
-
-	private function validation()
-	{
-		if (empty($this->data)) {
-			$this->errorMsg = Item::FORMAT["値未入力"];
+		if (empty($this->inputData)) {
+			$this->errorMsg = $format;
 			return;
 		}
 	}
@@ -24,68 +17,51 @@ class InputNameValidation
 		if ($this->errorMsg) {
 			return $this->errorMsg;
 		}
+	}
+}
+
+// バリデーション
+class InputNameValidation extends BaseValidation
+{
+	public function __construct($inputData)
+	{
+		$this->inputData = $inputData;
+		$this->emptyValidate(Item::FORMAT["値未入力"]);
 	}
 }
 
 
 // 入力値が指定されている場合のバリデーション
-class InputMatchValidation
+class InputMatchValidation extends BaseValidation
 {
-	private $num;
 	private $match;
-	private $errorMsg;
+	private $format;
 
-	public function __construct($num, $match)
+	public function __construct($inputData, $match, $format)
 	{
-		$this->num = $num;
+		$this->inputData = $inputData;
 		$this->match = $match;
-		$this->validation();
+		$this->format = $format;
+
+		$this->emptyValidate(Item::FORMAT["値未入力"]);
+		$this->matchValidate();
 	}
 
-	private function validation()
+	private function matchValidate()
 	{
-		if (empty($this->num)) {
-			$this->errorMsg = Item::FORMAT["値未入力"];
+		if (!in_array($this->inputData, $this->match, true)) {
+			$this->errorMsg = $this->format;
 			return;
-		}
-		if (!in_array($this->num, $this->match, true)) {
-			$this->errorMsg = "unmatch";
-			return;
-		}
-	}
-
-	public function getErrorMsg()
-	{
-		if ($this->errorMsg) {
-			return $this->errorMsg;
 		}
 	}
 }
 
 
-class ImportCsvValidation// 追加★
+class ImportCsvValidation extends BaseValidation
 {
-	private $data;
-	private $errorMsg;
-
-	public function __construct($data)
+	public function __construct($inputData)
 	{
-		$this->data = $data;
-		$this->validation();
-	}
-
-	private function validation()
-	{
-		if (empty($this->data)) {
-			$this->errorMsg = Item::FORMAT["読込用データ不明"];
-			return;
-		}
-	}
-
-	public function getErrorMsg()
-	{
-		if ($this->errorMsg) {
-			return $this->errorMsg;
-		}
+		$this->inputData = $inputData;
+		$this->emptyValidate(Item::FORMAT["読込用データ不明"]);
 	}
 }

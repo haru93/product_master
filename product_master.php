@@ -23,7 +23,7 @@ class Item
 		"読込用ファイル不明" => "ファイルが存在しないため読み込めませんでした\nimportフォルダに読込用ファイルを格納してください\n"
 	);
 
-	public const CHOICE = array(
+	private const CHOICE = array(
 		"商品一覧表示" => "1",
 		"商品登録" => "2",
 		"商品削除" => "3",
@@ -32,7 +32,7 @@ class Item
 		"終了" => "6"
 	);
 
-	public const CONTINUE = array(
+	private const CONTINUE = array(
 		"はい" => "1",
 		"いいえ" => "2"
 	);
@@ -59,12 +59,13 @@ class Item
 		echo self::FORMAT["操作選択"];
 		$num = trim(fgets(STDIN));
 
-		$inputMatchValidation = new InputMatchValidation($num, self::CHOICE);
+		$inputMatchValidation = new InputMatchValidation($num, self::CHOICE, self::FORMAT["入力値不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
-		
-		if ($errorMsg === "unmatch") echo self::FORMAT["入力値不明"];
-		if (!empty($errorMsg) && $errorMsg !== "unmatch") echo $errorMsg;
-		if (!empty($errorMsg)) return $this->inputChoice();
+
+		if (!empty($errorMsg)) {
+			echo $errorMsg;
+			return $this->inputChoice();
+		}
 		return $num;
 	}
 
@@ -107,12 +108,13 @@ class Item
 		echo self::FORMAT["終了確認"];
 		$num = trim(fgets(STDIN));
 
-		$inputMatchValidation = new InputMatchValidation($num, self::CONTINUE);
+		$inputMatchValidation = new InputMatchValidation($num, self::CONTINUE, self::FORMAT["入力値不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
 
-		if ($errorMsg === "unmatch") echo self::FORMAT["入力値不明"];
-		if (!empty($errorMsg) && $errorMsg !== "unmatch") echo $errorMsg;
-		if (!empty($errorMsg)) return $this->inputConfirm();
+		if (!empty($errorMsg)) {
+			echo $errorMsg;
+			return $this->inputConfirm();
+		}
 		return $num;
 	}
 
@@ -215,12 +217,13 @@ class Item
 			}
 		}
 
-		$inputMatchValidation = new InputMatchValidation($id, $idList);
+		$inputMatchValidation = new InputMatchValidation($id, $idList, self::FORMAT["ID不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
-
-		if ($errorMsg === "unmatch") echo self::FORMAT["ID不明"];
-		if (!empty($errorMsg) && $errorMsg !== "unmatch") echo $errorMsg;
-		if (!empty($errorMsg)) return $this->inputId($data);
+		
+		if (!empty($errorMsg)) {
+			echo $errorMsg;
+			return $this->inputId($data);
+		}
 		return $id;
 	}
 
