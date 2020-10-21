@@ -94,43 +94,35 @@ class Item
 		}
 	}
 
-	// プログラム継続確認
-	private function confirm()
-	{
-		$inputData = $this->inputConfirm();
-
-		if ($inputData === self::CONTINUE["はい"]) return true;
-		if ($inputData === self::CONTINUE["いいえ"]) return false;
-	}
-
+	
 	private function inputConfirm()
 	{
 		echo self::FORMAT["終了確認"];
 		$inputData = trim(fgets(STDIN));
-
+		
 		$inputMatchValidation = new InputMatchValidation($inputData, self::CONTINUE, self::FORMAT["入力値不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
-
+		
 		if (!empty($errorMsg)) {
 			echo $errorMsg;
 			return $this->inputConfirm();
 		}
 		return $inputData;
 	}
-
+	
 	// 商品一覧の表示
 	private function show()
 	{
 		$file = new File;
 		$data = $file->readFile();
-
+		
 		foreach ($data as $line) {
 			echo implode(",", $line)."\n";
 		}
-
+		
 		$this->main();
 	}
-
+	
 	// 商品の登録
 	private function add()
 	{
@@ -155,18 +147,18 @@ class Item
 		
 		$line = sprintf("%d,%s,%d\n", $lastIdAdd, $inputData, $code);
 		$file->addFile($line);
-
+		
 		$this->show();
 		$this->main();
 	}
-
-
+	
+	
 	// 商品名入力
 	private function inputName()
 	{
 		echo self::FORMAT["商品入力"];
 		$inputData = trim(fgets(STDIN));
-
+		
 		$inputNameValidation = new InputNameValidation($inputData);
 		$errorMsg = $inputNameValidation->getErrorMsg();
 		if (!empty($errorMsg)) {
@@ -175,7 +167,7 @@ class Item
 		}
 		return $inputData;
 	}
-
+	
 	// 商品の削除
 	private function delete()
 	{
@@ -193,33 +185,33 @@ class Item
 		foreach ($data as $key => $line) {
 			if ($line[0] === $id) {
 				$checkKey = $key;
-				break;
-			}
+			break;
 		}
-
-		unset($data[$checkKey]);
-
-		$file->writeFile($data);
-
-		$this->show();
-		$this->main();
 	}
+	
+	unset($data[$checkKey]);
+	
+	$file->writeFile($data);
+	
+	$this->show();
+	$this->main();
+}
 
 	// 商品IDの入力
 	private function inputId($data)
 	{
 		echo self::FORMAT["商品削除"];
 		$id = trim(fgets(STDIN));
-
+		
 		foreach ($data as $key => $line) {
 			if ($key > 0) {
 				$idList[] = $line[0];
 			}
 		}
-
+		
 		$inputMatchValidation = new InputMatchValidation($id, $idList, self::FORMAT["ID不明"]);
 		$errorMsg = $inputMatchValidation->getErrorMsg();
-
+		
 		if (!empty($errorMsg)) {
 			echo $errorMsg;
 			return $this->inputId($data);
@@ -232,9 +224,9 @@ class Item
 	{
 		$file = new File;
 		$file->newCsv();
-
+		
 		echo self::FORMAT["CSV出力"];
-
+		
 		$this->main();
 	}
 
@@ -243,7 +235,7 @@ class Item
 	{
 		$file = new File;
 		$file->import();
-
+		
 		$this->main();
 	}
 
@@ -252,8 +244,17 @@ class Item
 	{
 		$isConfirm = $this->confirm();
 		if (!$isConfirm) return $this->main();
-
+		
 		exit(self::FORMAT["操作終了"]);
+	}
+
+	// プログラム継続確認
+	private function confirm()
+	{
+		$inputData = $this->inputConfirm();
+
+		if ($inputData === self::CONTINUE["はい"]) return true;
+		if ($inputData === self::CONTINUE["いいえ"]) return false;
 	}
 }
 

@@ -4,7 +4,7 @@ class BaseValidation
 	protected $inputData;
 	protected $errorMsg;
 	
-	public function emptyValidate($format)
+	protected function emptyValidate($format)
 	{
 		if (empty($this->inputData)) {
 			$this->errorMsg = $format;
